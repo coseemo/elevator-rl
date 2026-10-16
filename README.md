@@ -1,89 +1,165 @@
-# Elaborato Autonomous Multi Agent
+# Elaborato — Autonomous Agents and Intelligent Robotics
 
-Questo notebook contiene il progetto per il corso di Autonomous Agents and Intelligent Robotics. 
-Per questo elaborato si è simulare e analizzato l'applicazione dell'algoritmo di RL **placeholder** per andare ad automatizzare in modo "intelligente" il comportamento di un ascensore; il lavoro è diviso in tre parti principali:
+## Descrizione del progetto
 
-1. La definizione del comportamento dell'ascensore e del relativo ambiente virtuale.
+Questo repository contiene il progetto sviluppato per il corso di **Autonomous Agents and Intelligent Robotics**.
 
-2. Un richiamo teorico su **placeholder**.
+L'obiettivo dell'elaborato è simulare e analizzare l'applicazione di algoritmi di **Reinforcement Learning (RL)** per automatizzare la gestione di un ascensore all'interno di un edificio di cinque piani.
 
-3. Un'analisi approfondita sull'addestramento e il tuning degli iperparametri del modello.
+Il lavoro è organizzato in tre parti principali:
 
-Infine, è inoltre presente una piccola sezione di conclusioni che riassume i fenomeni salienti osservati durante lo sviluppo del progetto.
+1. **Definizione dell'ambiente:** modellazione del comportamento dell'ascensore, dei passeggeri e delle code di attesa.
+2. **Fondamenti teorici:** introduzione all'algoritmo di Reinforcement Learning utilizzato.
+3. **Addestramento e analisi:** studio del processo di apprendimento e ottimizzazione degli iperparametri.
 
-## Albero Cartelle
+Il progetto si conclude con un'analisi dei principali risultati e dei fenomeni osservati durante lo sviluppo e la sperimentazione del modello.
 
--placeholder-
+## Struttura del repository
 
-## Librerie Utilizzate (le principali)
+```text
+ascensori-rl/
+├── Elevator.ipynb
+├── .gitignore
+└── README.md
+```
 
-- gymnasium
+Il notebook `Elevator.ipynb` contiene la definizione dell'ambiente, i test di verifica e le successive fasi di analisi e addestramento; le dipendenze sono direttamente installabili dal notebook.
 
-## Risorse Utilizzate
+## Risorse
 
-- https://gymnasium.farama.org/
+- [Documentazione ufficiale di Gymnasium](https://gymnasium.farama.org/)
 
-# Prima Parte: Alti e Bassi
+---
 
-In questa sezione del notebook andiamo a definire il comportamento dell'ascensore e dell'ambiente che questo andrà a servire: un palazzo di 5 piani e i suoi, più o meno numerosi, passeggeri.
-Per definire tale ambiente è stata disposta una coda per ciascun piano del palazzo che modella la coda di passeggeri in attesa davanti all'ascensore, i passeggeri vengono generati in modo casuale tramite una distribuzione di Poisson, la quale, durante ogni intervallo temporale, determina il numero di nuovi arrivi a ciascun piano. La destinazione di ciascun passeggero viene invece estratta quando quest'ultimo sale sull'ascensore, utilizzando una matrice di probabilità origine-destinazione $P_{OD}$.
+# 1. Modellazione dell'ambiente — Alti e Bassi
 
-Lo stato osservabile dell'ambiente sarà dunque composto come segue:
+## 1.1 Descrizione del sistema
 
-$$
-S = \{coda_0, coda_1, coda_2, coda_3, coda_4, attesa_0, attesa_1, attesa_2, attesa_3, attesa_4, piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}
-$$
+L'ambiente simulato rappresenta un edificio di cinque piani, servito da un ascensore in grado di trasportare un solo passeggero alla volta.
 
-Per ogni piano l'agente osserva dunque sia **quanti** passeggeri sono in coda sia **da quanto tempo** aspetta il passeggero che è arrivato per primo: $attesa_i$ è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano $i$ (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
+Per ciascun piano viene mantenuta una coda di passeggeri in attesa. Gli arrivi sono generati casualmente mediante una distribuzione di Poisson, che determina il numero di nuovi passeggeri che raggiungono ciascun piano durante ogni intervallo temporale.
 
-L'ascensore si sposta di un piano per ogni azione di salita o discesa e ciascuno step della simulazione corrisponde a un intervallo temporale di 5 secondi. L'imbarco avviene quando l'ascensore è vuoto **e** si trova a un piano con almeno un passeggero in attesa **e** |l'agente sceglie di restare fermo **o** ha appena sbarcato un altro passeggero|, lo sbarco, invece, avviene automaticamente quando l'ascensore raggiunge il piano di destinazione; in questo modo si è cercato di modellare sia la possibilità di transitare da un piano con passeggeri in attesa **senza necessariamente fermarsi** sia il fatto che, una volta portato a destinazione un passeggero in un piano con altri passeggeri in attesa, lo scambio tra chi esce e chi entra avvenisse in un **solo step**.
+La destinazione di ciascun passeggero viene estratta al momento dell'imbarco, utilizzando una matrice di probabilità origine-destinazione \(P_{OD}\).
 
-Ciò che vogliamo rendere efficiente è la gestione delle code ai vari piani, in particolare vorremo che le code non fossero troppo lunghe ma neanche che vi fossero persone che aspettano da troppo tempo; se si usasse come reward $r =-N$ avremmo code meno numerose ma, potrebbe capitare di avere passeggeri che aspettano molto tempo in attesa, se, al contrario, si usasse $R_t = -\sum_{i \in Q_t}(t-t_i^{arrivo})$ (dove $Q_t$ rappresenta l'insieme dei passeggeri ancora in attesa al termine dello step), si penalizzerebbero maggiormente le attese lunghe, questo però potrebbe portare a trascurare maggiormente le code più lunghe, le quali sul lungo periodo potrebbero causare un rallentamento.
+Ogni step della simulazione corrisponde a un intervallo temporale di **5 secondi**. Durante ciascuno step l'agente seleziona un'azione, l'ascensore aggiorna la propria posizione e vengono gestiti gli eventuali imbarchi, sbarchi e nuovi arrivi.
 
-Per questo motivo, si è cercato di definire una reward che considerasse entrambe queste esigenze:
+## 1.2 Spazio delle osservazioni
 
-$$
-R_t = -\left(N_t + \lambda \frac{W_t}{T_{rif}}\right)
-$$
-
-dove $W_t$ rappresenta la somma dei tempi di attesa di tutti i passeggeri ancora in coda, $T_{rif}$ è un tempo di riferimento espresso in secondi e $\lambda$ è un parametro che regola il peso attribuito alle attese prolungate.
-
-In questo modo, la reward penalizza sia la presenza di numerosi passeggeri in attesa sia il protrarsi delle attese nel tempo. Il parametro $\lambda$ permette di regolare il contributo del secondo termine, mentre la normalizzazione tramite $T_{rif}$ rende le due componenti più facilmente confrontabili.
-
-Infine, le possibili azioni dell'ascensore sono le seguenti:
+Lo stato osservabile dell'ambiente è definito come:
 
 $$
-A = \{Resta\ fermo,\ Sale,\ Scende\}
+S_t =
+\{
+q_0,\ldots,q_4,\,
+w_0,\ldots,w_4,\,
+\ell_t,\,
+d_t,\,
+p_t
+\}
 $$
 
-## Gymansium: Costruendo la Palestra
+Dove:
 
-Per modellare l'ambiente è stata utilizzata la libreria Python **Gymnasium**, che mette a disposizione un'interfaccia standard per la definizione di ambienti per il *Reinforcement Learning* (RL), in questo modo è possibile separare la logica dell'ambiente da quella dell'agente e utilizzare algoritmi di apprendimento compatibili con la libreria.
+- \(q_i\) rappresenta il numero di passeggeri in attesa al piano \(i\).
+- \(w_i\) rappresenta il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano \(i\). Se la coda è vuota, il valore è pari a zero.
+- \(\ell_t\) rappresenta il piano attuale dell'ascensore.
+- \(d_t\) rappresenta il piano di destinazione del passeggero a bordo.
+- \(p_t \in \{0,1\}\) indica se l'ascensore è occupato.
 
-Per costruire l'ambiente è stata definita la classe ElevatorEnv, ereditando gym.Env, questo ci consente di avere accesso alle funzionalità di base previste da Gymnasium e viene garantita la compatibilità con gli strumenti che implementano algoritmi di RL.
+L'osservazione permette quindi di conoscere sia la numerosità delle code sia l'anzianità della maggiore attesa presente a ciascun piano. Queste informazioni sono complementari: il solo numero di passeggeri non permette di distinguere una coda appena formata da una in cui qualcuno aspetta da molto tempo.
+
+Quando l'ascensore è vuoto, il piano di destinazione coincide con quello attuale. Nel notebook, le osservazioni relative alle code e ai tempi di attesa sono rappresentate rispettivamente dai campi `q1`–`q5` e `w1`–`w5`.
+
+## 1.3 Spazio delle azioni e dinamica dell'ascensore
+
+Le azioni disponibili all'agente sono:
+
+$$
+A = \{\text{Resta fermo},\ \text{Sale},\ \text{Scende}\}
+$$
+
+Per ogni azione di salita o discesa, l'ascensore si sposta di un piano, rispettando i limiti dell'edificio.
+
+L'imbarco avviene quando l'ascensore è vuoto, si trova a un piano con almeno un passeggero in attesa e si verifica una delle seguenti condizioni:
+
+- l'agente sceglie di restare fermo;
+- un passeggero è appena sbarcato al piano corrente.
+
+Lo sbarco avviene automaticamente quando l'ascensore raggiunge il piano di destinazione.
+
+Questa dinamica consente all'ascensore di attraversare un piano senza necessariamente fermarsi per imbarcare un passeggero. Inoltre, quando un passeggero scende in un piano in cui sono presenti persone in attesa, il ricambio dei passeggeri avviene nello stesso step.
+
+## 1.4 Definizione della reward
+
+L'obiettivo è rendere efficiente la gestione delle code, limitando sia il numero di passeggeri in attesa sia il tempo trascorso in coda.
+
+Una prima possibilità consiste nel penalizzare il numero totale di passeggeri in attesa:
+
+$$
+R_t^{(1)} = -N_t
+$$
+
+dove \(N_t\) rappresenta il numero complessivo di passeggeri in coda. Questa formulazione penalizza ogni passeggero in attesa in modo uniforme.
+
+Una seconda possibilità consiste nel penalizzare la somma dei tempi di attesa:
+
+$$
+R_t^{(2)} =
+-\sum_{i \in Q_t}(t-t_i^{\text{arrivo}})
+$$
+
+dove \(Q_t\) è l'insieme dei passeggeri ancora in attesa, \(t\) è il tempo corrente della simulazione e \(t_i^{\text{arrivo}}\) è l'istante di arrivo del passeggero \(i\).
+
+In questo caso, i passeggeri che aspettano da più tempo contribuiscono maggiormente alla penalità. Tuttavia, utilizzare esclusivamente il tempo di attesa accumulato può rendere la reward fortemente influenzata dalle attese più lunghe.
+
+Per combinare entrambe le esigenze, è stata definita una reward che considera sia il numero di passeggeri in attesa sia la somma dei loro tempi di attesa:
+
+$$
+R_t =
+-\left(
+N_t + \lambda \frac{W_t}{T_{\mathrm{rif}}}
+\right)
+$$
+
+Dove:
+
+- \(N_t\) è il numero totale di passeggeri ancora in coda.
+- \(W_t\) è la somma dei loro tempi di attesa, espressa in secondi.
+- \(T_{\mathrm{rif}}\) è un tempo di riferimento espresso in secondi.
+- \(\lambda\) è un parametro che regola il peso attribuito alle attese prolungate.
+
+La normalizzazione tramite \(T_{\mathrm{rif}}\) permette di rendere confrontabili le due componenti della reward. In questo modo viene penalizzata sia la presenza di code numerose sia la permanenza prolungata dei passeggeri in attesa.
+
+La reward viene calcolata sullo stato risultante dalla transizione, dopo la gestione degli imbarchi e degli eventuali nuovi arrivi.
+
+## 1.5 Definizione dell'ambiente con Gymnasium
+
+Per implementare la simulazione è stata utilizzata la libreria Python **Gymnasium**, che fornisce un'interfaccia standard per la definizione di ambienti di Reinforcement Learning.
+
+L'ambiente è stato implementato mediante la classe `ElevatorEnv`, che eredita da `gym.Env`. Questa struttura permette di separare la logica dell'ambiente da quella dell'agente e di utilizzare strumenti compatibili con l'interfaccia di Gymnasium.
 
 All'interno della classe sono stati implementati i seguenti metodi principali:
 
-- __init\__(): viene inizializzato l'ambiente, definendo le caratteristiche dell'edificio, le code dei passeggeri, i parametri del processo di arrivo e gli spazi delle azioni e delle osservazioni.
-- reset(): viene inizializzata una nuova simulazione, ripristinando le condizioni iniziali dell'ambiente e azzerando le informazioni accumulate durante l'episodio precedente. Vengono inoltre restituite la prima osservazione e un dizionario contenente informazioni aggiuntive.
-- step(action): viene eseguito un passo della simulazione sulla base dell'azione selezionata dall'agente. In questo metodo vengono gestiti lo spostamento dell'ascensore, l'imbarco e lo sbarco dei passeggeri, l'arrivo di nuovi passeggeri e il calcolo della reward.
+- `__init__()`: inizializza l'ambiente, definendo le caratteristiche dell'edificio, le code dei passeggeri, il processo di arrivo e gli spazi delle azioni e delle osservazioni.
+- `reset()`: inizializza un nuovo episodio, ripristinando lo stato dell'ascensore, le code e le informazioni accumulate durante la simulazione precedente.
+- `step(action)`: esegue un passo della simulazione in base all'azione selezionata dall'agente. Gestisce il movimento dell'ascensore, gli imbarchi, gli sbarchi, gli arrivi e il calcolo della reward.
 
-Al termine di ogni chiamata al metodo step(), vengono restituiti cinque elementi, secondo l'interfaccia prevista da Gymnasium: observation, reward, terminated, truncated e info. In particolare, terminated indica il raggiungimento di una condizione terminale dell'ambiente, mentre truncated segnala l'interruzione dell'episodio dovuta al raggiungimento del numero massimo di step previsto; in questo caso verrà utilizzato truncated in quanto si è immaginato che il flusso dei passeggeri fosse continuo.
+Il metodo `step()` restituisce cinque elementi, secondo l'interfaccia di Gymnasium: `observation`, `reward`, `terminated`, `truncated` e `info`.
 
-Una volta definiti i metodi principali e gli spazi delle azioni e delle osservazioni, l'ambiente può essere istanziato e utilizzato per l'addestramento di un agente. Durante l'apprendimento, l'agente riceve le osservazioni dell'ambiente, seleziona le azioni da eseguire e ottiene una reward in funzione delle conseguenze delle proprie decisioni.
+In particolare, `terminated` indica il raggiungimento di una condizione terminale naturale, mentre `truncated` segnala l'interruzione dell'episodio dovuta al raggiungimento del numero massimo di step. Nel modello viene utilizzato il troncamento, poiché si considera un flusso di passeggeri continuo e si limita la durata di ciascun episodio.
 
-### Testing dell'ambiente
+## 1.6 Testing dell'ambiente
 
-Vengono adesso svolti i seguenti test sull'ambiente definito sinora al fine di verificarne la correttezza:
+Per verificare la correttezza dell'ambiente sono stati eseguiti i seguenti test:
 
-1. test di correttezza sintattica con *check_env()* da gymnasium
-2. verifica del funzionamento delle azioni
-3. verifica dell'arrivo dei passeggeri
-4. verifica dell'imbarco
-5. verifica dello sbarco
-6. verifica sbarco-imbarco
-7. verifica della reward
-8. verifica dell'osservazione
-9. test di coerenza dello stato
+1. Verifica della compatibilità con Gymnasium tramite `check_env()`.
+2. Verifica del comportamento delle azioni.
+3. Verifica del processo di arrivo dei passeggeri.
+4. Verifica dell'imbarco.
+5. Verifica dello sbarco.
+6. Verifica dello sbarco seguito dall'imbarco automatico nello stesso step.
+7. Verifica del calcolo della reward.
+8. Verifica della validità delle osservazioni.
+9. Verifica della coerenza dello stato dell'ambiente.
 
-L'ambiente rispetta tutti questi test.
+I test sono stati utilizzati per controllare il funzionamento delle principali transizioni e la coerenza tra le code, i tempi di arrivo e lo stato dell'ascensore.
