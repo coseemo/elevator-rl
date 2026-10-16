@@ -29,7 +29,7 @@ ascensori-rl/
 
 In questa sezione del notebook andiamo a definire il comportamento dell'ascensore e dell'ambiente che questo andrà a servire: un palazzo di 5 piani e i suoi, più o meno numerosi, passeggeri.
 
-Per definire tale ambiente è stata disposta una coda per ciascun piano del palazzo che modella la coda di passeggeri in attesa davanti all'ascensore, i passeggeri vengono generati in modo casuale tramite una distribuzione di Poisson, la quale, durante ogni intervallo temporale, determina il numero di nuovi arrivi a ciascun piano. La destinazione di ciascun passeggero viene invece estratta quando quest'ultimo sale sull'ascensore, utilizzando una matrice di probabilità origine-destinazione $P_{OD}$.
+Per definire tale ambiente è stata disposta una coda per ciascun piano del palazzo che modella la coda di passeggeri in attesa davanti all'ascensore, i passeggeri vengono generati in modo casuale tramite una distribuzione di Poisson, la quale, durante ogni intervallo temporale, determina il numero di nuovi arrivi a ciascun piano. La destinazione di ciascun passeggero viene invece estratta quando quest'ultimo sale sull'ascensore, utilizzando una matrice di probabilità origine-destinazione `P_{OD}`.
 
 Lo stato osservabile dell'ambiente sarà dunque composto come segue:
 
@@ -39,11 +39,11 @@ attesa_0, attesa_1, attesa_2, attesa_3, attesa_4,
 piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}
 $$
 
-Per ogni piano l'agente osserva dunque sia **quanti** passeggeri sono in coda sia **da quanto tempo** aspetta il passeggero che è arrivato per primo: $attesa_i$ è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano $i$ (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
+Per ogni piano l'agente osserva dunque sia **quanti** passeggeri sono in coda sia **da quanto tempo** aspetta il passeggero che è arrivato per primo: `attesa_i` è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano `i` (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
 
 L'ascensore si sposta di un piano per ogni azione di salita o discesa e ciascuno step della simulazione corrisponde a un intervallo temporale di 5 secondi. L'imbarco avviene quando l'ascensore è vuoto **e** si trova a un piano con almeno un passeggero in attesa **e** |l'agente sceglie di restare fermo **o** ha appena sbarcato un altro passeggero|, lo sbarco, invece, avviene automaticamente quando l'ascensore raggiunge il piano di destinazione; in questo modo si è cercato di modellare sia la possibilità di transitare da un piano con passeggeri in attesa **senza necessariamente fermarsi** sia il fatto che, una volta portato a destinazione un passeggero in un piano con altri passeggeri in attesa, lo scambio tra chi esce e chi entra avvenisse in un **solo step**.
 
-Ciò che vogliamo rendere efficiente è la gestione delle code ai vari piani, in particolare vorremo che le code non fossero troppo lunghe ma neanche che vi fossero persone che aspettano da troppo tempo; se si usasse come reward $r =-N$ avremmo code meno numerose ma, potrebbe capitare di avere passeggeri che aspettano molto tempo in attesa, se, al contrario, si usasse $R_t = -\sum_{i \in Q_t}(t-t_i^{arrivo})$ (dove $Q_t$ rappresenta l'insieme dei passeggeri ancora in attesa al termine dello step), si penalizzerebbero maggiormente le attese lunghe, questo però potrebbe portare a trascurare maggiormente le code più lunghe, le quali sul lungo periodo potrebbero causare un rallentamento.
+Ciò che vogliamo rendere efficiente è la gestione delle code ai vari piani, in particolare vorremo che le code non fossero troppo lunghe ma neanche che vi fossero persone che aspettano da troppo tempo; se si usasse come reward `r =-N` avremmo code meno numerose ma, potrebbe capitare di avere passeggeri che aspettano molto tempo in attesa, se, al contrario, si usasse `R_t = -\sum_{i \in Q_t}(t-t_i^{arrivo})` (dove `Q_t` rappresenta l'insieme dei passeggeri ancora in attesa al termine dello step), si penalizzerebbero maggiormente le attese lunghe, questo però potrebbe portare a trascurare maggiormente le code più lunghe, le quali sul lungo periodo potrebbero causare un rallentamento.
 
 Per questo motivo, si è cercato di definire una reward che considerasse entrambe queste esigenze:
 
@@ -51,9 +51,9 @@ $$
 R_t = -\left(N_t + \lambda \frac{W_t}{T_{rif}}\right)
 $$
 
-dove $W_t$ rappresenta la somma dei tempi di attesa di tutti i passeggeri ancora in coda, $T_{rif}$ è un tempo di riferimento espresso in secondi e $\lambda$ è un parametro che regola il peso attribuito alle attese prolungate.
+dove `W_t` rappresenta la somma dei tempi di attesa di tutti i passeggeri ancora in coda, `T_{rif}` è un tempo di riferimento espresso in secondi e `\lambda` è un parametro che regola il peso attribuito alle attese prolungate.
 
-In questo modo, la reward penalizza sia la presenza di numerosi passeggeri in attesa sia il protrarsi delle attese nel tempo. Il parametro $\lambda$ permette di regolare il contributo del secondo termine, mentre la normalizzazione tramite $T_{rif}$ rende le due componenti più facilmente confrontabili.
+In questo modo, la reward penalizza sia la presenza di numerosi passeggeri in attesa sia il protrarsi delle attese nel tempo. Il parametro `\lambda` permette di regolare il contributo del secondo termine, mentre la normalizzazione tramite `T_{rif}` rende le due componenti più facilmente confrontabili.
 
 Infine, le possibili azioni dell'ascensore sono le seguenti:
 
