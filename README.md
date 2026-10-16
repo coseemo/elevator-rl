@@ -33,13 +33,14 @@ Per definire tale ambiente è stata disposta una coda per ciascun piano del pala
 
 Lo stato osservabile dell'ambiente sarà dunque composto come segue:
 
+$$
+S = \{c0, c1, c2, c3, c4,
+w0, w1, w2, w3, w4,
+piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}
+$$
 
-`S = \{coda_0, coda_1, coda_2, coda_3, coda_4,
-attesa_0, attesa_1, attesa_2, attesa_3, attesa_4,
-piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}`
 
-
-Per ogni piano l'agente osserva dunque sia **quanti** passeggeri sono in coda sia **da quanto tempo** aspetta il passeggero che è arrivato per primo: `attesa_i` è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano `i` (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
+Per ogni piano l'agente osserva dunque sia **quanti passeggeri** sono in coda(C) sia **da quanto tempo aspetta il passeggero che è arrivato per primo**(W): `attesa_i` è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano `i` (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
 
 L'ascensore si sposta di un piano per ogni azione di salita o discesa e ciascuno step della simulazione corrisponde a un intervallo temporale di 5 secondi. L'imbarco avviene quando l'ascensore è vuoto **e** si trova a un piano con almeno un passeggero in attesa **e** |l'agente sceglie di restare fermo **o** ha appena sbarcato un altro passeggero|, lo sbarco, invece, avviene automaticamente quando l'ascensore raggiunge il piano di destinazione; in questo modo si è cercato di modellare sia la possibilità di transitare da un piano con passeggeri in attesa **senza necessariamente fermarsi** sia il fatto che, una volta portato a destinazione un passeggero in un piano con altri passeggeri in attesa, lo scambio tra chi esce e chi entra avvenisse in un **solo step**.
 
