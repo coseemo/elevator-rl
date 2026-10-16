@@ -60,11 +60,11 @@ $$
 
 Dove:
 
-- \(q_i\) rappresenta il numero di passeggeri in attesa al piano \(i\).
-- \(w_i\) rappresenta il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano \(i\). Se la coda è vuota, il valore è pari a zero.
-- \(\ell_t\) rappresenta il piano attuale dell'ascensore.
-- \(d_t\) rappresenta il piano di destinazione del passeggero a bordo.
-- \(p_t \in \{0,1\}\) indica se l'ascensore è occupato.
+- $(q_i\)$ rappresenta il numero di passeggeri in attesa al piano $(i\)$.
+- $(w_i\)$ rappresenta il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano $(i\)$. Se la coda è vuota, il valore è pari a zero.
+- $(\ell_t\)$ rappresenta il piano attuale dell'ascensore.
+- $(d_t\)$ rappresenta il piano di destinazione del passeggero a bordo.
+- $(p_t \in \{0,1\}\)$ indica se l'ascensore è occupato.
 
 L'osservazione permette quindi di conoscere sia la numerosità delle code sia l'anzianità della maggiore attesa presente a ciascun piano. Queste informazioni sono complementari: il solo numero di passeggeri non permette di distinguere una coda appena formata da una in cui qualcuno aspetta da molto tempo.
 
@@ -123,10 +123,10 @@ $$
 
 Dove:
 
-- \(N_t\) è il numero totale di passeggeri ancora in coda.
-- \(W_t\) è la somma dei loro tempi di attesa, espressa in secondi.
-- \(T_{\mathrm{rif}}\) è un tempo di riferimento espresso in secondi.
-- \(\lambda\) è un parametro che regola il peso attribuito alle attese prolungate.
+- $(N_t\)$ è il numero totale di passeggeri ancora in coda.
+- $(W_t\)$ è la somma dei loro tempi di attesa, espressa in secondi.
+- $(T_{\mathrm{rif}}\)$ è un tempo di riferimento espresso in secondi.
+- $(\lambda\)$ è un parametro che regola il peso attribuito alle attese prolungate.
 
 La normalizzazione tramite \(T_{\mathrm{rif}}\) permette di rendere confrontabili le due componenti della reward. In questo modo viene penalizzata sia la presenza di code numerose sia la permanenza prolungata dei passeggeri in attesa.
 
@@ -162,4 +162,4 @@ Per verificare la correttezza dell'ambiente sono stati eseguiti i seguenti test:
 8. Verifica della validità delle osservazioni.
 9. Verifica della coerenza dello stato dell'ambiente.
 
-I test sono stati utilizzati per controllare il funzionamento delle principali transizioni e la coerenza tra le code, i tempi di arrivo e lo stato dell'ascensore.
+I test sono stati utilizzati per controllare il funzionamento delle principali transizioni, la coerenza tra le code, i tempi di arrivo e lo stato dell'ascensore; l'ambiente al momento supera tutti i test citati sopra.
