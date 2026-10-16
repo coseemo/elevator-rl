@@ -60,11 +60,11 @@ $$
 
 Dove:
 
-- $(q_i\)$ rappresenta il numero di passeggeri in attesa al piano $(i\)$.
-- $(w_i\)$ rappresenta il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano $(i\)$. Se la coda è vuota, il valore è pari a zero.
-- $(\ell_t\)$ rappresenta il piano attuale dell'ascensore.
-- $(d_t\)$ rappresenta il piano di destinazione del passeggero a bordo.
-- $(p_t \in \{0,1\}\)$ indica se l'ascensore è occupato.
+- $(q_i)$ rappresenta il numero di passeggeri in attesa al piano $(i)$.
+- $(w_i)$ rappresenta il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano $(i)$. Se la coda è vuota, il valore è pari a zero.
+- $(\ell_t)$ rappresenta il piano attuale dell'ascensore.
+- $(d_t)$ rappresenta il piano di destinazione del passeggero a bordo.
+- $(p_t \in \{0,1\})$ indica se l'ascensore è occupato.
 
 L'osservazione permette quindi di conoscere sia la numerosità delle code sia l'anzianità della maggiore attesa presente a ciascun piano. Queste informazioni sono complementari: il solo numero di passeggeri non permette di distinguere una coda appena formata da una in cui qualcuno aspetta da molto tempo.
 
