@@ -1,0 +1,14 @@
+# ambiente virtuale Python
+.venv/
+venv/
+
+# checkpoint di Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# file temporanei Python
+__pycache__/
+*.py[cod]
+
+# file contenenti variabili d'ambiente
+.env
