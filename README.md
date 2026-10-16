@@ -1,6 +1,6 @@
 # Elaborato Autonomous Multi Agent
 
-Questo notebook contiene il progetto per il corso di Autonoumus Multi Agent. 
+Questo notebook contiene il progetto per il corso di Autonomous Agents and Intelligent Robotics. 
 Per questo elaborato si è simulare e analizzato l'applicazione dell'algoritmo di RL **placeholder** per andare ad automatizzare in modo "intelligente" il comportamento di un ascensore; il lavoro è diviso in tre parti principali:
 
 1. La definizione del comportamento dell'ascensore e del relativo ambiente virtuale.
