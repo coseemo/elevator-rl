@@ -33,11 +33,11 @@ Per definire tale ambiente è stata disposta una coda per ciascun piano del pala
 
 Lo stato osservabile dell'ambiente sarà dunque composto come segue:
 
-$$
-S = \{coda_0, coda_1, coda_2, coda_3, coda_4,
+
+`S = \{coda_0, coda_1, coda_2, coda_3, coda_4,
 attesa_0, attesa_1, attesa_2, attesa_3, attesa_4,
-piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}
-$$
+piano\ attuale, piano\ destinazione, passeggero\ a\ bordo\}`
+
 
 Per ogni piano l'agente osserva dunque sia **quanti** passeggeri sono in coda sia **da quanto tempo** aspetta il passeggero che è arrivato per primo: `attesa_i` è infatti il tempo di attesa, in secondi, del passeggero che aspetta da più tempo al piano `i` (se la coda è vuota, è pari a 0). Il campo relativo alla destinazione rappresenta la destinazione del passeggero a bordo, quando l'ascensore è vuoto questo coincide con il piano attuale dell'ascensore. L'ascensore può inoltre trasportare **un solo passeggero** alla volta, per questo il campo relativo al passeggero a bordo può assumere solo i valori 0 e 1.
 
